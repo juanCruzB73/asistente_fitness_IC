@@ -2,7 +2,7 @@
 
 from fitness import db
 from fitness.agente import procesar_comando
-from fitness.voz import escuchar, hablar
+from fitness.voz import configurar_modo, escuchar, hablar
 
 MENU = """
 Comandos que entiendo por ahora:
@@ -24,17 +24,19 @@ Comandos que entiendo por ahora:
   - Ver recordatorios:  "recordatorios"
                         Se conservan solo durante la sesión, sin avisos automáticos.
   - salir:              termina el programa (también Ctrl+C o Ctrl+D)
+  - modo voz:           activa micrófono y respuesta hablada (envía audio a Google)
+  - modo texto:         vuelve al teclado
 """
 
 
-def main():
+def main(modo="texto"):
     """Inicializa la base y ejecuta la sesión hasta salir o cerrar la entrada."""
     db.inicializar()
 
-    hablar("Bienvenido a tu agente de fitness.")
-    print(MENU)
-
     try:
+        configurar_modo(modo)
+        hablar("Bienvenido a tu agente de fitness.")
+        hablar(MENU)
         _ejecutar_bucle()
     except (EOFError, KeyboardInterrupt):
         # Deja la despedida en otra línea si había un prompt activo.
@@ -56,11 +58,22 @@ def _ejecutar_bucle():
             return
 
         if comando in ("ayuda", "help"):
-            print(MENU)
+            hablar(MENU)
+            continue
+
+        if comando in ("modo texto", "modo voz"):
+            modo = comando.split()[1]
+            if configurar_modo(modo):
+                hablar(f"Modo {modo} activado.")
             continue
 
         procesar_comando(entrada)
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Asistente personal de fitness")
+    parser.add_argument("--modo", choices=("texto", "voz"), default="texto",
+                        help="Voz envía audio a Google y requiere dependencias opcionales.")
+    main(parser.parse_args().modo)

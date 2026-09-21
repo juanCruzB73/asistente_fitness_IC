@@ -1,12 +1,12 @@
 # Asistente virtual de fitness
 
 Aplicación de terminal para guardar objetivos, consultar rutinas, registrar
-entrenamientos y comparar el peso utilizado en un ejercicio. Funciona por texto;
-la integración con voz corresponde a una etapa posterior.
+entrenamientos y comparar el peso utilizado en un ejercicio. Funciona por texto y ofrece un modo de voz opcional, pendiente de validación
+con micrófono y altavoces reales.
 
 ## Ejecutar
 
-Requiere Python 3 con SQLite y utiliza únicamente la biblioteca estándar.
+El modo texto requiere Python 3 con SQLite y utiliza únicamente la biblioteca estándar.
 Desde la raíz del proyecto:
 
 ```bash
@@ -15,6 +15,117 @@ python3 main.py
 
 La primera ejecución crea `fitness.db` en el directorio desde el que se ejecuta
 el comando. No requiere instalar dependencias ni servicios externos.
+
+## Ejecutar desde Windows (PowerShell)
+
+### 1. Preparar Python y el proyecto
+
+Instalá Python 3 desde [Python para Windows](https://www.python.org/downloads/windows/).
+Abrí una nueva terminal PowerShell y comprobá la instalación:
+
+```powershell
+py --version
+```
+
+Si `py` no se reconoce pero `python --version` funciona, usá `python` en lugar
+de `py` en los comandos siguientes. Para voz, usá Python 3.9 o posterior,
+compatible con las dependencias opcionales.
+
+Copiá o descargá el proyecto completo y descomprimilo. Entrá en la carpeta que
+contiene `main.py`, reemplazando esta ruta por la de tu equipo:
+
+```powershell
+cd "C:\Users\TuUsuario\Documents\asistente_fitness_IC"
+```
+
+Si copiaste el proyecto desde Linux, creá un entorno nuevo en Windows: la carpeta
+`.venv` de Linux no sirve en Windows. Los archivos del proyecto y `fitness.db`
+se pueden conservar.
+
+### 2. Ejecutar por texto
+
+No requiere instalar las dependencias de voz:
+
+```powershell
+py main.py --modo texto
+```
+
+Cuando aparezca `Tu:`, escribí `piernas` y presioná Enter. Podés escribir
+`ayuda` para ver los comandos o `salir` para cerrar. Ctrl+C también termina la
+sesión; en la consola de Windows, el fin de entrada se envía con Ctrl+Z y Enter.
+
+### 3. Preparar el modo de voz
+
+Desde la misma carpeta, creá un entorno virtual e instalá las dependencias:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements-voz.txt
+```
+
+Estos comandos usan directamente el Python del entorno: no hace falta ejecutar
+`Activate.ps1` ni cambiar la política de ejecución de PowerShell.
+En Windows, [SpeechRecognition instala el soporte de micrófono mediante el extra
+audio](https://pypi.org/project/SpeechRecognition/) y
+[pyttsx3 utiliza SAPI5](https://pypi.org/project/pyttsx3/).
+Los comandos `sudo apt` y las rutas `.venv/bin/python` de la sección Linux no
+corresponden a Windows.
+
+Conectá el micrófono y los altavoces. En la configuración de Windows, buscá
+“micrófono”, habilitá el acceso para aplicaciones de escritorio y seleccioná
+el dispositivo de entrada que quieras usar como predeterminado.
+
+### 4. Ejecutar por voz
+
+```powershell
+.\.venv\Scripts\python.exe main.py --modo voz
+```
+
+**El audio se envía a Google para transcribirlo y requiere Internet.**
+Mantené silencio durante la calibración. Cuando aparezca “Escuchando”, decí
+“quiero ver mi rutina de piernas”. Deberías ver la transcripción y escuchar
+la respuesta. Decí “modo texto” para volver al teclado o “salir” para cerrar.
+También podés iniciar por texto con el entorno y activar la voz después:
+
+```powershell
+.\.venv\Scripts\python.exe main.py --modo texto
+```
+
+Dentro del asistente, escribí `modo voz`. Para abrirlo otro día, entrá de nuevo
+en la carpeta del proyecto y ejecutá el comando del modo deseado; no necesitás
+reinstalar las dependencias.
+
+### 5. Ejecutar las pruebas
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -v
+```
+
+Si solo usás texto y no creaste el entorno, usá
+`py -X utf8 -m unittest discover -s tests -v`. Las pruebas de voz simulan el audio;
+la comprobación con micrófono y altavoces reales se realiza por separado.
+
+### Problemas frecuentes en Windows
+
+- **No encuentra `main.py`:** ejecutá `dir` y comprobá que estés dentro de la
+  carpeta del proyecto, no en su carpeta contenedora.
+- **Falta un módulo:** instalá `requirements-voz.txt` con el mismo
+  `.\.venv\Scripts\python.exe` que usás para iniciar el programa.
+- **Falla la instalación de PyAudio:** revisá que haya una distribución
+  compatible con tu versión y arquitectura de Python; el modo texto puede
+  seguir usándose mientras resolvés la instalación de audio.
+- **No detecta el micrófono:** comprobá permisos, dispositivo predeterminado y
+  que funcione en la grabadora de Windows. Ante un fallo el asistente vuelve a texto.
+- **No se escucha o pronuncia mal:** revisá el volumen y las voces españolas
+  instaladas en Windows. El programa usa una voz española disponible o la
+  predeterminada si no encuentra ninguna.
+- **Caracteres extraños en la terminal:** probá iniciar con
+  `.\.venv\Scripts\python.exe -X utf8 main.py --modo texto`.
+
+La ejecución en Windows y el audio real todavía no se verificaron en este
+entorno de desarrollo Linux. La base se guarda en el directorio de ejecución:
+iniciá siempre desde la misma carpeta para consultar los mismos registros.
 
 ## Comandos
 
@@ -108,8 +219,63 @@ Las consultas comunican su resultado mediante `hablar()` y devuelven `None`.
 cerrarse; el contexto de transacción de SQLite no cierra la conexión por sí solo.
 Al invocar funciones persistentes fuera del CLI, inicializá antes la base.
 
-Para la futura voz, el punto de extensión es `fitness/voz.py`. Las operaciones de
-dominio ya usan `hablar()`; la ayuda y el salto de línea al interrumpir todavía
-usan `print()` en `main.py`. Esa salida debe revisarse al integrar el modo de voz.
+La voz se implementa en `fitness/voz.py`, sin modificar las funciones de dominio.
+`configurar_modo()` carga las dependencias opcionales y devuelve si pudo activar
+el modo solicitado. `escuchar()` transcribe y `hablar()` muestra y sintetiza las
+respuestas, incluida la ayuda. Los diagnósticos de audio se muestran en terminal.
 
 El avance y las etapas pendientes están en [PLAN_DE_TRABAJO.md](PLAN_DE_TRABAJO.md).
+
+
+## Modo de voz (opcional)
+
+Utiliza [SpeechRecognition](https://pypi.org/project/SpeechRecognition/) para
+transcribir con Google y [pyttsx3](https://pypi.org/project/pyttsx3/) para síntesis
+local. **Al activar voz, el audio se envía a Google y se necesita Internet.**
+Se usa el micrófono predeterminado y reconocimiento en español de Argentina
+(`es-AR`). Se selecciona una voz española instalada si está disponible; de lo
+contrario se mantiene la voz predeterminada del sistema.
+
+En Debian/Ubuntu, instalá los componentes del sistema:
+
+```bash
+sudo apt install python3-venv python3-dev portaudio19-dev espeak-ng libespeak1
+```
+
+Desde la raíz del proyecto, creá un entorno e instalá las dependencias opcionales:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-voz.txt
+.venv/bin/python main.py --modo voz
+```
+
+Para comenzar por teclado: `.venv/bin/python main.py --modo texto`. Dentro de
+la sesión, `modo voz` y `modo texto` cambian la entrada y salida sin perder datos.
+La voz empieza a escuchar después de terminar cada respuesta. Mantené silencio
+durante la calibración inicial y hablá cuando aparezca “Escuchando”.
+
+Decí “quiero ver mi rutina de piernas”, “cuál es mi objetivo” o “salir”. Para
+los comandos con separadores, dictá “punto y coma”; el adaptador lo convierte a
+`;`. Por ejemplo: “registrar sentadillas punto y coma 40 punto y coma 10 punto y
+coma 3”. El servicio debe transcribir los números en cifras para que el validador
+existente los acepte; no se convierten números escritos como palabras.
+La transcripción se muestra antes de procesarla y se ejecuta como un comando
+escrito, por lo que conviene revisar los datos confirmados por el agente.
+
+Cada escucha espera hasta 5 segundos para comenzar y captura hasta 15 segundos.
+El silencio o audio incomprensible permiten reintentar. Si fallan el dispositivo,
+la red o la síntesis, el programa vuelve al teclado. Ctrl+C termina la sesión.
+
+### Verificación de audio pendiente
+
+Las pruebas automatizadas simulan micrófono, reconocimiento y síntesis: no
+certifican la calidad del audio real. En un equipo con micrófono y altavoces:
+
+1. Iniciá con `--modo voz` y comprobá que se escuche el saludo.
+2. Consultá una rutina y verificá transcripción y respuesta hablada.
+3. Fijá un objetivo, registrá dos entrenamientos y consultá su progreso.
+4. Decí “modo texto”, volvé con `modo voz` y terminá diciendo “salir”.
+
+El bloque 12 sigue parcial hasta completar esta prueba real. En el entorno de
+desarrollo no hay dispositivos de audio ni dependencias opcionales instaladas.

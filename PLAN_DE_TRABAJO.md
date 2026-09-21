@@ -22,7 +22,7 @@
 | [x] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
 | [x] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
 | [x] | 11 | Documentación y modularidad | Todos | Media |
-| [ ] | 12 | Integración con voz (fase posterior) | 10 | Media |
+| [~] | 12 | Integración con voz (fase posterior) | 10 | Media |
 | [ ] | 13 | Ampliaciones futuras (opcional) | 10 | Baja |
 
 > Leyenda: `[x]` completado · `[~]` parcial (base para testear) · `[ ]` pendiente.
@@ -259,6 +259,16 @@ Verificación: 22 pruebas aprobadas con `python3 -m unittest discover -s tests -
 - Permitir alternar entre modo texto y modo voz.
 
 **Hecho cuando:** el agente funciona por voz de extremo a extremo reutilizando toda la lógica del CLI.
+
+**Implementado, pendiente de validación real:** adaptador opcional con
+SpeechRecognition (Google, es-AR) y pyttsx3, inicio con `--modo voz` y cambio
+mediante `modo texto` / `modo voz`. Se reutiliza la lógica de dominio; el CLI
+solo agrega selección de modo y deriva la ayuda a `hablar()`.
+Incluye calibración, límites de escucha, separador dictado “punto y coma” y
+retorno a texto ante fallos. Instalación y prueba manual en [README.md](README.md).
+27 pruebas aprobadas, incluidas 5 de voz con dispositivos y servicios simulados.
+Este entorno carece de dispositivos de audio y dependencias opcionales: falta
+comprobar reconocimiento y reproducción reales para marcar el bloque completo.
 
 ---
 
