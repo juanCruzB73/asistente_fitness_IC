@@ -2,7 +2,7 @@
 
 Aplicación de terminal para guardar objetivos, consultar rutinas, registrar
 entrenamientos y comparar el peso utilizado en un ejercicio. Funciona por texto y ofrece un modo de voz opcional, pendiente de validación
-con micrófono y altavoces reales.
+con micrófono y altavoces reales. También incluye una interfaz gráfica con Tkinter.
 
 ## Ejecutar
 
@@ -127,6 +127,54 @@ La ejecución en Windows y el audio real todavía no se verificaron en este
 entorno de desarrollo Linux. La base se guarda en el directorio de ejecución:
 iniciá siempre desde la misma carpeta para consultar los mismos registros.
 
+## Interfaz gráfica con Tkinter
+
+Desde la raíz del proyecto, abrí la ventana:
+
+```bash
+python3 main.py --interfaz grafica
+```
+
+En Windows (PowerShell):
+
+```powershell
+py main.py --interfaz grafica
+```
+
+Si ya creaste el entorno virtual en Windows:
+
+```powershell
+.\.venv\Scripts\python.exe main.py --interfaz grafica
+```
+
+La ventana tiene cuatro pestañas:
+
+- **Objetivo y rutinas:** guardar o consultar tu objetivo y elegir un grupo muscular.
+- **Entrenamiento:** ingresar ejercicio, peso en kg, repeticiones y series.
+- **Historial y progreso:** consultar el último entrenamiento o comparar pesos.
+  Al guardar un entrenamiento, su nombre queda preparado para estas consultas.
+- **Recordatorios:** agregar una hora y mensaje y consultar la lista de la sesión.
+
+Las confirmaciones y los errores aparecen en el panel inferior de respuestas.
+Podés navegar por los campos con Tab y cerrar mediante el botón Cerrar o la X.
+Los formularios usan las mismas validaciones y `fitness.db` que la terminal;
+iniciá ambas interfaces desde la misma carpeta para compartir registros.
+Los recordatorios siguen siendo temporales y no generan avisos automáticos.
+La interfaz gráfica usa texto; el reconocimiento y la síntesis de voz se
+mantienen disponibles en la terminal con `--modo voz`.
+
+Tkinter es un componente opcional de Python, no se instala con `pip`.
+En Windows, si falta, modificá la instalación de Python para incluir Tcl/Tk.
+En Debian/Ubuntu podés instalarlo con `sudo apt install python3-tk`.
+`py -m tkinter` en Windows o `python3 -m tkinter` en Linux permite comprobarlo
+abriendo una ventana de demostración; véase la
+[documentación oficial de Tkinter](https://docs.python.org/3/library/tkinter.html).
+Si no hay pantalla disponible, usá `--interfaz terminal`.
+
+Las pruebas de `tests/test_gui.py` ejecutan formularios con widgets reales y una
+base temporal. Se omiten automáticamente si no hay Tkinter o pantalla.
+Se verificaron en Linux; la presentación en Windows queda por comprobar.
+
 ## Comandos
 
 | Acción | Ejemplo |
@@ -183,6 +231,7 @@ la prueba automatizada del ejemplo utiliza un directorio temporal.
 | Archivo | Responsabilidad |
 | --- | --- |
 | `main.py` | Inicialización, ayuda, lectura en bucle y cierre |
+| `fitness/gui.py` | Ventana Tkinter, formularios y presentación de respuestas |
 | `fitness/voz.py` | `escuchar()` y `hablar()` como entrada y salida de texto |
 | `fitness/agente.py` | Reconocer comandos y delegar a las funciones de dominio |
 | `fitness/objetivos.py` | Guardar y consultar objetivos |
@@ -220,6 +269,9 @@ cerrarse; el contexto de transacción de SQLite no cierra la conexión por sí s
 Al invocar funciones persistentes fuera del CLI, inicializá antes la base.
 
 La voz se implementa en `fitness/voz.py`, sin modificar las funciones de dominio.
+La interfaz gráfica llama directamente a esas funciones y usa el contexto
+`usar_salida(receptor)` para mostrar sus respuestas en la ventana. Al terminar
+cada acción se restaura la salida anterior, incluso si ocurre un error.
 `configurar_modo()` carga las dependencias opcionales y devuelve si pudo activar
 el modo solicitado. `escuchar()` transcribe y `hablar()` muestra y sintetiza las
 respuestas, incluida la ayuda. Los diagnósticos de audio se muestran en terminal.

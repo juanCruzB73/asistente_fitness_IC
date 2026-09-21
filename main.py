@@ -74,6 +74,17 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Asistente personal de fitness")
+    parser.add_argument("--interfaz", choices=("terminal", "grafica"), default="terminal",
+                        help="Abre la terminal o la ventana de Tkinter.")
     parser.add_argument("--modo", choices=("texto", "voz"), default="texto",
                         help="Voz envía audio a Google y requiere dependencias opcionales.")
-    main(parser.parse_args().modo)
+    opciones = parser.parse_args()
+    if opciones.interfaz == "grafica":
+        if opciones.modo == "voz":
+            parser.error("El modo voz está disponible en la interfaz terminal.")
+        try:
+            from fitness.gui import iniciar
+        except ImportError as error:
+            parser.exit(1, f"No se pudo cargar Tkinter: {error}. Consultá README.md.\n")
+        raise SystemExit(iniciar())
+    main(opciones.modo)

@@ -23,7 +23,7 @@
 | [x] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
 | [x] | 11 | Documentación y modularidad | Todos | Media |
 | [~] | 12 | Integración con voz (fase posterior) | 10 | Media |
-| [ ] | 13 | Ampliaciones futuras (opcional) | 10 | Baja |
+| [x] | 13 | Interfaz gráfica y backlog de ampliaciones | 10 | Baja |
 
 > Leyenda: `[x]` completado · `[~]` parcial (base para testear) · `[ ]` pendiente.
 
@@ -274,16 +274,28 @@ comprobar reconocimiento y reproducción reales para marcar el bloque completo.
 
 ## Bloque 13 — Ampliaciones futuras (opcional)
 
-**Objetivo:** Dejar propuestas de mejora.
+**Objetivo:** Implementar la interfaz gráfica solicitada y dejar las demás mejoras priorizadas.
 
-**Ideas:**
-- Interfaz gráfica con `tkinter`.
-- Gráficos de progreso.
-- Cálculo de volumen de entrenamiento (series × reps × peso).
-- Perfiles de múltiples usuarios.
-- Conexión con dispositivos o apps de actividad física.
+**Implementado:** interfaz con `tkinter` y `ttk` en `fitness/gui.py`.
+Incluye objetivos, rutinas, registro, historial, progreso y recordatorios mediante
+formularios y botones, con respuestas y errores en la ventana. Reutiliza las
+funciones de dominio y SQLite. Inicio: `python3 main.py --interfaz grafica`;
+en Windows: `py main.py --interfaz grafica`. La terminal sigue disponible.
 
-**Hecho cuando:** las mejoras quedan listadas como backlog priorizado.
+**Verificación:** 30 pruebas en total. En el entorno aislado pasaron 28 y se
+omitieron 2 de widgets por falta de acceso a la pantalla. Las 3 pruebas de
+`test_gui.py` (incluidas esas 2) pasaron con acceso a la pantalla de Linux.
+Se verificaron el flujo por botones, validaciones y recuperación ante errores
+de SQLite. Queda pendiente comprobar la presentación en Windows.
+
+**Backlog restante, en orden de prioridad:**
+1. Cálculo de volumen de entrenamiento (series × reps × peso).
+2. Gráficos de progreso.
+3. Perfiles de múltiples usuarios.
+4. Conexión con dispositivos o apps de actividad física.
+
+**Hecho cuando:** la interfaz gráfica permite usar las funciones existentes y
+las demás mejoras quedan listadas como backlog priorizado.
 
 ---
 

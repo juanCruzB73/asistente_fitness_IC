@@ -1,6 +1,20 @@
 """Entrada/salida intercambiable: texto o micrófono con transcripción en Google."""
 
 import re
+from contextlib import contextmanager
+from contextvars import ContextVar
+
+_salida = ContextVar('salida', default=None)
+
+
+@contextmanager
+def usar_salida(receptor):
+    """Deriva respuestas al receptor durante una acción y restaura la salida."""
+    token = _salida.set(receptor)
+    try:
+        yield
+    finally:
+        _salida.reset(token)
 
 _modo = 'texto'
 _sr = None
@@ -50,6 +64,10 @@ def configurar_modo(modo):
 def hablar(mensaje):
     """Muestra el mensaje y, en modo voz, lo sintetiza; vuelve a texto si falla."""
     global _modo
+    receptor = _salida.get()
+    if receptor is not None:
+        receptor(str(mensaje))
+        return
     print(f'Agente: {mensaje}')
     if _modo == 'voz':
         try:
