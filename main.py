@@ -23,16 +23,27 @@ Comandos que entiendo por ahora:
   - Crear recordatorio: "recordatorio 18:30; Entrenar piernas"
   - Ver recordatorios:  "recordatorios"
                         Se conservan solo durante la sesión, sin avisos automáticos.
-  - salir:              termina el programa
+  - salir:              termina el programa (también Ctrl+C o Ctrl+D)
 """
 
 
 def main():
+    """Inicializa la base y ejecuta la sesión hasta salir o cerrar la entrada."""
     db.inicializar()
 
     hablar("Bienvenido a tu agente de fitness.")
     print(MENU)
 
+    try:
+        _ejecutar_bucle()
+    except (EOFError, KeyboardInterrupt):
+        # Deja la despedida en otra línea si había un prompt activo.
+        print()
+    hablar("Hasta la proxima. A entrenar!")
+
+
+def _ejecutar_bucle():
+    """Procesa entradas y comandos de control sin reenviarlos al router."""
     while True:
         entrada = escuchar().strip()
 
@@ -42,8 +53,7 @@ def main():
         comando = entrada.lower()
 
         if comando in ("salir", "chau", "exit"):
-            hablar("Hasta la proxima. A entrenar!")
-            break
+            return
 
         if comando in ("ayuda", "help"):
             print(MENU)

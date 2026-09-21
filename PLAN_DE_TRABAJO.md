@@ -19,7 +19,7 @@
 | [x] | 6 | Análisis de progreso | 1, 4 | Media |
 | [x] | 7 | Recordatorios | 0 | Media |
 | [x] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
-| [~] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
+| [x] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
 | [ ] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
 | [ ] | 11 | Documentación y modularidad | Todos | Media |
 | [ ] | 12 | Integración con voz (fase posterior) | 10 | Media |
@@ -195,6 +195,13 @@ Verificado con `python3 -m unittest discover -s tests -v` (16 pruebas en total).
 - Manejar entrada vacía o inválida sin cortar la ejecución.
 
 **Hecho cuando:** el agente corre en la terminal (`python main.py`), acepta comandos por texto y se cierra limpiamente con `salir`.
+
+**Implementado:** ejecutar `python3 main.py`. La ayuda inicial y `ayuda`/`help`
+muestran los comandos disponibles. El bucle ignora entradas vacías y continúa
+tras comandos desconocidos o datos inválidos. `salir`, `chau`, `exit`, Ctrl+C
+y fin de entrada (Ctrl+D) cierran la sesión con una despedida sin traceback.
+Verificado con `python3 -m unittest discover -s tests -v` (20 pruebas en total),
+incluyendo una ejecución real del programa con base de datos temporal.
 
 ---
 
