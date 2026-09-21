@@ -16,7 +16,7 @@
 | [x] | 3 | Gestión de rutinas | 0 | Alta |
 | [x] | 4 | Registro de entrenamientos | 1 | Alta |
 | [x] | 5 | Consulta de historial | 1, 4 | Alta |
-| [ ] | 6 | Análisis de progreso | 1, 4 | Media |
+| [x] | 6 | Análisis de progreso | 1, 4 | Media |
 | [ ] | 7 | Recordatorios | 0 | Media |
 | [~] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
 | [~] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
@@ -133,6 +133,13 @@ omitido o sin registros. Verificado con `python3 -m unittest discover -s tests -
 - Manejar el caso con menos de dos registros.
 
 **Hecho cuando:** el agente informa la evolución de peso desde el primer registro.
+
+**Implementado:** `analizar_progreso(ejercicio)` en `fitness/progreso.py`.
+Comando: `progreso de sentadillas` o `Quiero ver mi progreso de sentadillas`.
+Compara el primer y el último peso por fecha (desempata por id) e informa
+aumento, disminución o igualdad junto con ambas fechas. Maneja nombre omitido
+y menos de dos registros. Verificado con `python3 -m unittest discover -s tests -v`
+(9 pruebas de registro, historial y progreso con base temporal).
 
 ---
 

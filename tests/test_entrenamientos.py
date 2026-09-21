@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from fitness import db
 from fitness.entrenamientos import consultar_historial, registrar_ejercicio
+from fitness.progreso import analizar_progreso
 from main import main
 
 
@@ -79,6 +80,61 @@ class RegistroTests(unittest.TestCase):
         self.assertIn("Indica el ejercicio", self.salida.getvalue())
         self.assertIn("Todavía no tienes registros de 'remo'", self.salida.getvalue())
         self.assertIn("Tu objetivo actual es: aumentar masa muscular", self.salida.getvalue())
+        with closing(db.conectar()) as conexion:
+            self.assertEqual(conexion.execute("SELECT COUNT(*) FROM objetivos").fetchone()[0], 1)
+
+    def test_progreso_aumento_disminucion_e_igualdad(self):
+        for ejercicio, inicial, final, esperado in [
+            ("Press", 40, 45, "El peso aumentó 5"),
+            ("Remo", 30, 25, "El peso disminuyó 5"),
+            ("Flexiones", 0, 0, "El peso se mantuvo igual"),
+            ("Jalón", 0.1, 0.3, "El peso aumentó 0.2 kg"),
+        ]:
+            with self.subTest(ejercicio=ejercicio):
+                registrar_ejercicio(ejercicio, inicial, 10, 3)
+                registrar_ejercicio(ejercicio, final, 10, 3)
+                self.salida.truncate(0)
+                self.salida.seek(0)
+                analizar_progreso(ejercicio.upper())
+                self.assertIn(esperado, self.salida.getvalue())
+
+    def test_progreso_ordena_por_fecha_y_id_y_filtra_ejercicio(self):
+        with closing(db.conectar()) as conexion:
+            with conexion:
+                conexion.executemany(
+                    "INSERT INTO entrenamientos "
+                    "(ejercicio, peso, repeticiones, series, fecha) VALUES (?, ?, 10, 3, ?)",
+                    [
+                        ("Jalón", 40, "2026-09-20 10:00:00"),
+                        ("Jalón", 45, "2026-09-20 10:00:00"),
+                        ("Jalón", 20, "2026-09-19 10:00:00"),
+                        ("Jalón", 25, "2026-09-19 10:00:00"),
+                        ("Remo", 90, "2026-09-21 10:00:00"),
+                    ],
+                )
+        antes = self.registros()
+        analizar_progreso(" JALÓN ")
+        self.assertIn("Primer registro: 20 kg (2026-09-19 10:00:00)", self.salida.getvalue())
+        self.assertIn("Último registro: 45 kg (2026-09-20 10:00:00)", self.salida.getvalue())
+        self.assertIn("El peso aumentó 25", self.salida.getvalue())
+        self.assertEqual(antes, self.registros())
+
+    def test_cli_progreso_maneja_datos_insuficientes_y_preserva_objetivo(self):
+        entradas = [
+            "Quiero aumentar masa muscular", "progreso", "progreso de Remo",
+            "registrar Remo; 20; 10; 3", "progreso de Remo",
+            "registrar Remo; 25; 10; 3", "Quiero ver mi progreso de REMO",
+            "Cual es mi objetivo?", "salir",
+        ]
+        with patch("builtins.input", side_effect=entradas):
+            main()
+        texto = self.salida.getvalue()
+        self.assertIn("Indica el ejercicio", texto)
+        self.assertIn("Todavía no tienes registros de 'Remo'", texto)
+        self.assertIn("Necesitas al menos dos registros", texto)
+        self.assertIn("El peso aumentó 5", texto)
+        self.assertIn("Tu objetivo actual es: aumentar masa muscular", texto)
+        self.assertIn("Hasta la proxima", texto)
         with closing(db.conectar()) as conexion:
             self.assertEqual(conexion.execute("SELECT COUNT(*) FROM objetivos").fetchone()[0], 1)
 

@@ -2,7 +2,7 @@
 
 import re
 
-from fitness import entrenamientos, objetivos, rutinas
+from fitness import entrenamientos, objetivos, progreso, rutinas
 from fitness.voz import hablar
 
 # Frases que indican que el usuario quiere "fijar" un objetivo.
@@ -22,17 +22,25 @@ def procesar_comando(comando):
     elif re.search(r"\bhistorial\b", texto):
         _manejar_historial(comando)
 
+    elif re.search(r"\bprogreso\b", texto):
+        _manejar_progreso(comando)
+
     elif "objetivo" in texto or "quiero" in texto or "meta" in texto:
         _manejar_objetivo(comando, texto)
-
-    elif "progreso" in texto:
-        hablar("El analisis de progreso se implementa en el Bloque 6.")
 
     else:
         hablar(
             "No entendi el comando. Puedes preguntarme por tu objetivo, "
             "rutina o progreso. Escribe 'ayuda' para ver los comandos."
         )
+
+
+def _manejar_progreso(comando):
+    """Acepta 'progreso de sentadillas' y 'Quiero ver mi progreso de ...'."""
+    ejercicio = re.split(r"\bprogreso\b", comando, maxsplit=1, flags=re.IGNORECASE)[1]
+    ejercicio = ejercicio.strip(" :¿?¡!.,")
+    ejercicio = re.sub(r"^de(?:\s+|$)", "", ejercicio, count=1, flags=re.IGNORECASE)
+    progreso.analizar_progreso(ejercicio)
 
 
 def _manejar_historial(comando):

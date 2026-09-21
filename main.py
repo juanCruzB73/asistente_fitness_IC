@@ -15,6 +15,8 @@ Comandos que entiendo por ahora:
                          Usa 0 kg si no hay carga y punto o coma para decimales.
   - Consultar historial: "historial de sentadillas"
                          Muestra el último entrenamiento del ejercicio.
+  - Analizar progreso:  "progreso de sentadillas"
+                        Compara el primer y el último peso registrado.
   - ayuda:              muestra esta ayuda
   - salir:              termina el programa
 """
