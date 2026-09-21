@@ -13,7 +13,7 @@
 | [x] | 0 | Preparación y diseño | — | Alta |
 | [x] | 1 | Base de datos y persistencia | 0 | Alta |
 | [x] | 2 | Gestión de objetivos | 0 | Alta |
-| [ ] | 3 | Gestión de rutinas | 0 | Alta |
+| [x] | 3 | Gestión de rutinas | 0 | Alta |
 | [ ] | 4 | Registro de entrenamientos | 1 | Alta |
 | [ ] | 5 | Consulta de historial | 1, 4 | Alta |
 | [ ] | 6 | Análisis de progreso | 1, 4 | Media |

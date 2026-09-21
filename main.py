@@ -8,6 +8,8 @@ MENU = """
 Comandos que entiendo por ahora:
   - Fijar objetivo:     "Quiero aumentar masa muscular"
   - Consultar objetivo: "Cual es mi objetivo?"
+  - Consultar rutina:   "Quiero ver mi rutina de piernas"
+                        Grupos: pecho, espalda, piernas
   - ayuda:              muestra esta ayuda
   - salir:              termina el programa
 """

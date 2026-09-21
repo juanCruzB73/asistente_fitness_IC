@@ -1,6 +1,8 @@
 #compresion de comandos
 
-from fitness import objetivos
+import re
+
+from fitness import objetivos, rutinas
 from fitness.voz import hablar
 
 # Frases que indican que el usuario quiere "fijar" un objetivo.
@@ -11,11 +13,11 @@ def procesar_comando(comando):
     #Recibe texto del usuario y ejecuta la accion correspondiente.
     texto = comando.lower().strip()
 
-    if "objetivo" in texto or "quiero" in texto or "meta" in texto:
-        _manejar_objetivo(comando, texto)
+    if re.search(r"\brutina\b", texto):
+        _manejar_rutina(texto)
 
-    elif "rutina" in texto:
-        hablar("La gestion de rutinas se implementa en el Bloque 3.")
+    elif "objetivo" in texto or "quiero" in texto or "meta" in texto:
+        _manejar_objetivo(comando, texto)
 
     elif "historial" in texto:
         hablar("La consulta de historial se implementa en el Bloque 5.")
@@ -28,6 +30,14 @@ def procesar_comando(comando):
             "No entendi el comando. Puedes preguntarme por tu objetivo, "
             "rutina o progreso. Escribe 'ayuda' para ver los comandos."
         )
+
+
+def _manejar_rutina(texto):
+    """Extrae el grupo de comandos como 'Quiero ver mi rutina de piernas'."""
+    grupo = re.split(r"\brutina\b", texto, maxsplit=1)[1].strip(" :¿?¡!.,")
+    grupo = re.sub(r"^(?:de|para)(?:\s+|$)", "", grupo)
+    grupo = re.sub(r"^(?:el|la|los|las)(?:\s+|$)", "", grupo)
+    rutinas.mostrar_rutina(grupo)
 
 
 def _manejar_objetivo(original, texto):
