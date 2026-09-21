@@ -7,9 +7,11 @@ from fitness.voz import escuchar, hablar
 MENU = """
 Comandos que entiendo por ahora:
   - Fijar objetivo:     "Quiero aumentar masa muscular"
+                        O bien: "Mi objetivo es ganar fuerza"
   - Consultar objetivo: "Cual es mi objetivo?"
   - Consultar rutina:   "Quiero ver mi rutina de piernas"
                         Grupos: pecho, espalda, piernas
+                        También puedes escribir solo el grupo: "piernas"
   - Registrar ejercicio: "registrar sentadillas; 40; 10; 3"
                          Orden: ejercicio; peso en kg; repeticiones; series
                          Usa 0 kg si no hay carga y punto o coma para decimales.

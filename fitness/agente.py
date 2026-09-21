@@ -1,117 +1,89 @@
-#compresion de comandos
+"""Interpreta los comandos de texto y los deriva al módulo correspondiente."""
 
 import re
 
 from fitness import entrenamientos, objetivos, progreso, recordatorios, rutinas
 from fitness.voz import hablar
 
-# Frases que indican que el usuario quiere "fijar" un objetivo.
-_DISPARADORES_SET = ("quiero", "mi objetivo es", "objetivo:", "meta es")
+_CONSULTA = r"(?:quiero\s+)?(?:(?:ver|consultar|mostrar|muéstrame|muestrame)\s+)?"
 
 
 def procesar_comando(comando):
-    #Recibe texto del usuario y ejecuta la accion correspondiente.
-    texto = comando.lower().strip()
-
-    if re.match(r"^(?:quiero\s+)?(?:agregar\s+)?recordatorio\b", texto):
-        _manejar_recordatorio(comando)
-
-    elif re.fullmatch(r"(?:quiero\s+)?(?:ver\s+|consultar\s+)?(?:mis\s+)?recordatorios", texto):
-        recordatorios.consultar_recordatorios()
-
-    elif re.match(r"^(?:quiero\s+)?registrar\b", texto):
-        _manejar_registro(comando)
-
-    elif re.search(r"\brutina\b", texto):
-        _manejar_rutina(texto)
-
-    elif re.search(r"\bhistorial\b", texto):
-        _manejar_historial(comando)
-
-    elif re.search(r"\bprogreso\b", texto):
-        _manejar_progreso(comando)
-
-    elif "objetivo" in texto or "quiero" in texto or "meta" in texto:
-        _manejar_objetivo(comando, texto)
-
-    else:
-        hablar(
-            "No entendi el comando. Puedes preguntarme por tu objetivo, "
-            "rutina o progreso. Escribe 'ayuda' para ver los comandos."
-        )
-
-
-def _manejar_recordatorio(comando):
-    """Lee 'recordatorio HH:MM; mensaje' sin interpretar el texto del mensaje."""
-    datos = re.sub(
-        r"^(?:quiero\s+)?(?:agregar\s+)?recordatorio\b\s*", "", comando.strip(),
-        count=1, flags=re.IGNORECASE,
-    ).split(";", maxsplit=1)
-    if len(datos) != 2:
-        hablar("Usa: recordatorio HH:MM; mensaje. Ejemplo: recordatorio 18:30; Entrenar piernas")
+    """Reconoce la intención al inicio sin interpretar palabras de los datos."""
+    if not isinstance(comando, str) or not comando.strip():
+        hablar("Escribe un comando. Usa 'ayuda' para ver las opciones.")
         return
-    recordatorios.agregar_recordatorio(*datos)
+    original = comando.strip().strip("¿?¡!.").strip()
 
+    def coincide(patron, fuente=None):
+        return re.fullmatch(patron, original if fuente is None else fuente, flags=re.IGNORECASE)
 
-def _manejar_progreso(comando):
-    """Acepta 'progreso de sentadillas' y 'Quiero ver mi progreso de ...'."""
-    ejercicio = re.split(r"\bprogreso\b", comando, maxsplit=1, flags=re.IGNORECASE)[1]
-    ejercicio = ejercicio.strip(" :¿?¡!.,")
-    ejercicio = re.sub(r"^de(?:\s+|$)", "", ejercicio, count=1, flags=re.IGNORECASE)
-    progreso.analizar_progreso(ejercicio)
-
-
-def _manejar_historial(comando):
-    """Acepta 'historial de sentadillas' y 'Quiero ver mi historial de ...'."""
-    ejercicio = re.split(r"\bhistorial\b", comando, maxsplit=1, flags=re.IGNORECASE)[1]
-    ejercicio = ejercicio.strip(" :¿?¡!.,")
-    ejercicio = re.sub(r"^de(?:\s+|$)", "", ejercicio, count=1, flags=re.IGNORECASE)
-    entrenamientos.consultar_historial(ejercicio)
-
-
-def _manejar_registro(comando):
-    """Lee ejercicio, peso, repeticiones y series separados por punto y coma."""
-    datos = re.sub(
-        r"^(?:quiero\s+)?registrar\b\s*", "", comando.strip(),
-        count=1, flags=re.IGNORECASE,
-    ).split(";")
-    if len(datos) != 4:
-        hablar(
-            "Usa: registrar ejercicio; peso en kg; repeticiones; series. "
-            "Ejemplo: registrar sentadillas; 40; 10; 3"
-        )
-        return
-    entrenamientos.registrar_ejercicio(*datos)
-
-
-def _manejar_rutina(texto):
-    """Extrae el grupo de comandos como 'Quiero ver mi rutina de piernas'."""
-    grupo = re.split(r"\brutina\b", texto, maxsplit=1)[1].strip(" :¿?¡!.,")
-    grupo = re.sub(r"^(?:de|para)(?:\s+|$)", "", grupo)
-    grupo = re.sub(r"^(?:el|la|los|las)(?:\s+|$)", "", grupo)
-    rutinas.mostrar_rutina(grupo)
-
-
-def _manejar_objetivo(original, texto):
-    #Distingue entre fijar un objetivo y consultarlo.
-    quiere_fijar = any(d in texto for d in _DISPARADORES_SET)
-
-    if quiere_fijar:
-        objetivo = _extraer_objetivo(original, texto)
-        if objetivo:
-            objetivos.establecer_objetivo(objetivo)
+    registro = coincide(r"(?:quiero\s+)?registrar\b\s*(.*)")
+    recordatorio = coincide(r"(?:quiero\s+)?(?:agregar\s+)?recordatorio\b\s*(.*)", comando.strip())
+    fijar = coincide(
+        r"(?:quiero\s+)?(?:(?:mi\s+)?(?:objetivo|meta)\s*(?:es\b|:)|"
+        r"(?:fijar|establecer|cambiar)\s+(?:mi\s+)?(?:objetivo|meta)\b)\s*(.*)"
+    )
+    if registro:
+        datos = registro[1].split(";")
+        if len(datos) != 4:
+            hablar("Usa: registrar ejercicio; peso en kg; repeticiones; series. "
+                   "Ejemplo: registrar sentadillas; 40; 10; 3")
         else:
-            hablar("Cuentame cual es tu objetivo, por ejemplo: "
-                   "'Quiero aumentar masa muscular'.")
-    else:
+            entrenamientos.registrar_ejercicio(*datos)
+        return
+    if recordatorio:
+        datos = recordatorio[1].split(";", maxsplit=1)
+        if len(datos) != 2:
+            hablar("Usa: recordatorio HH:MM; mensaje. "
+                   "Ejemplo: recordatorio 18:30; Entrenar piernas")
+        else:
+            recordatorios.agregar_recordatorio(*datos)
+        return
+    if fijar:
+        _establecer_objetivo(fijar[1])
+        return
+    if coincide(_CONSULTA + r"(?:mis\s+)?recordatorios"):
+        recordatorios.consultar_recordatorios()
+        return
+    if coincide(_CONSULTA + r"(?:mi\s+)?(?:objetivo|meta)") or coincide(
+        r"cu[aá]l\s+es\s+(?:mi\s+)?(?:objetivo|meta)"
+    ):
         objetivos.consultar_objetivo()
+        return
+
+    consulta = coincide(_CONSULTA + r"(?:mi\s+)?(rutina|historial|progreso)\b\s*(.*)")
+    if consulta:
+        tipo, dato = consulta[1].lower(), consulta[2].strip(" :")
+        dato = re.sub(r"^(?:de|para)(?:\s+|$)", "", dato, count=1, flags=re.IGNORECASE)
+        if tipo == "rutina":
+            dato = re.sub(r"^(?:el|la|los|las)(?:\s+|$)", "", dato, count=1, flags=re.IGNORECASE)
+            rutinas.mostrar_rutina(dato)
+        elif tipo == "historial":
+            entrenamientos.consultar_historial(dato)
+        else:
+            progreso.analizar_progreso(dato)
+        return
+
+    grupo = coincide(_CONSULTA + r"(?:entrenar\s+)?(" + "|".join(map(re.escape, rutinas.rutinas)) + r")")
+    if grupo:
+        rutinas.mostrar_rutina(grupo[1].lower())
+        return
+
+    # Conserva la forma inicial de fijar objetivos sin capturar cualquier 'quiero'.
+    deseo = coincide(r"quiero\s+((?:aumentar|ganar|perder|bajar|mejorar|mantener)\b.*)")
+    if deseo:
+        _establecer_objetivo(deseo[1])
+        return
+    hablar("No entendi el comando. Puedes consultar tu objetivo, rutina, historial "
+           "o progreso, registrar ejercicios y gestionar recordatorios. "
+           "Escribe 'ayuda' para ver los comandos.")
 
 
-def _extraer_objetivo(original, texto):
-    #Quita la frase disparadora y devuelve el objetivo en si.
-    for disparador in _DISPARADORES_SET:
-        if disparador in texto:
-            # Corta a partir del disparador sobre el texto original.
-            inicio = texto.index(disparador) + len(disparador)
-            return original[inicio:].strip(" :.")
-    return original.strip()
+def _establecer_objetivo(objetivo):
+    """Evita guardar objetivos vacíos tras un disparador explícito."""
+    objetivo = objetivo.strip(" :.")
+    if objetivo:
+        objetivos.establecer_objetivo(objetivo)
+    else:
+        hablar("Cuentame cual es tu objetivo, por ejemplo: 'Mi objetivo es aumentar masa muscular'.")

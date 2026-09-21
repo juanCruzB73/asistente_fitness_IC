@@ -18,7 +18,7 @@
 | [x] | 5 | Consulta de historial | 1, 4 | Alta |
 | [x] | 6 | Análisis de progreso | 1, 4 | Media |
 | [x] | 7 | Recordatorios | 0 | Media |
-| [~] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
+| [x] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
 | [~] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
 | [ ] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
 | [ ] | 11 | Documentación y modularidad | Todos | Media |
@@ -174,6 +174,13 @@ Verificación: `python3 -m unittest discover -s tests -v` (13 pruebas en total).
 - Definir respuesta por defecto para comandos no reconocidos.
 
 **Hecho cuando:** frases como "Quiero ver mi rutina de piernas" ejecutan la función correspondiente.
+
+**Implementado:** router por intención al inicio del comando para los módulos 2–7.
+Reconoce consultas, objetivos explícitos, grupos musculares solos y frases como
+`Quiero entrenar espalda`. `Quiero ver mi objetivo` consulta sin sobrescribirlo.
+Para objetivos libres se usa `Mi objetivo es ...`; se conserva `Quiero aumentar
+masa muscular` y verbos afines. Entradas vacías o desconocidas reciben orientación.
+Verificado con `python3 -m unittest discover -s tests -v` (16 pruebas en total).
 
 ---
 
