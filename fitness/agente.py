@@ -2,7 +2,7 @@
 
 import re
 
-from fitness import entrenamientos, objetivos, progreso, rutinas
+from fitness import entrenamientos, objetivos, progreso, recordatorios, rutinas
 from fitness.voz import hablar
 
 # Frases que indican que el usuario quiere "fijar" un objetivo.
@@ -13,7 +13,13 @@ def procesar_comando(comando):
     #Recibe texto del usuario y ejecuta la accion correspondiente.
     texto = comando.lower().strip()
 
-    if re.match(r"^(?:quiero\s+)?registrar\b", texto):
+    if re.match(r"^(?:quiero\s+)?(?:agregar\s+)?recordatorio\b", texto):
+        _manejar_recordatorio(comando)
+
+    elif re.fullmatch(r"(?:quiero\s+)?(?:ver\s+|consultar\s+)?(?:mis\s+)?recordatorios", texto):
+        recordatorios.consultar_recordatorios()
+
+    elif re.match(r"^(?:quiero\s+)?registrar\b", texto):
         _manejar_registro(comando)
 
     elif re.search(r"\brutina\b", texto):
@@ -33,6 +39,18 @@ def procesar_comando(comando):
             "No entendi el comando. Puedes preguntarme por tu objetivo, "
             "rutina o progreso. Escribe 'ayuda' para ver los comandos."
         )
+
+
+def _manejar_recordatorio(comando):
+    """Lee 'recordatorio HH:MM; mensaje' sin interpretar el texto del mensaje."""
+    datos = re.sub(
+        r"^(?:quiero\s+)?(?:agregar\s+)?recordatorio\b\s*", "", comando.strip(),
+        count=1, flags=re.IGNORECASE,
+    ).split(";", maxsplit=1)
+    if len(datos) != 2:
+        hablar("Usa: recordatorio HH:MM; mensaje. Ejemplo: recordatorio 18:30; Entrenar piernas")
+        return
+    recordatorios.agregar_recordatorio(*datos)
 
 
 def _manejar_progreso(comando):

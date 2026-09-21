@@ -18,6 +18,9 @@ Comandos que entiendo por ahora:
   - Analizar progreso:  "progreso de sentadillas"
                         Compara el primer y el último peso registrado.
   - ayuda:              muestra esta ayuda
+  - Crear recordatorio: "recordatorio 18:30; Entrenar piernas"
+  - Ver recordatorios:  "recordatorios"
+                        Se conservan solo durante la sesión, sin avisos automáticos.
   - salir:              termina el programa
 """
 

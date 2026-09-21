@@ -17,7 +17,7 @@
 | [x] | 4 | Registro de entrenamientos | 1 | Alta |
 | [x] | 5 | Consulta de historial | 1, 4 | Alta |
 | [x] | 6 | Análisis de progreso | 1, 4 | Media |
-| [ ] | 7 | Recordatorios | 0 | Media |
+| [x] | 7 | Recordatorios | 0 | Media |
 | [~] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
 | [~] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
 | [ ] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
@@ -153,6 +153,14 @@ y menos de dos registros. Verificado con `python3 -m unittest discover -s tests 
 - (Opcional) verificar la hora actual para disparar avisos.
 
 **Hecho cuando:** se puede crear un recordatorio y el agente lo confirma.
+
+**Implementado:** `agregar_recordatorio(hora, mensaje)` y
+`consultar_recordatorios()` en `fitness/recordatorios.py`.
+Comandos: `recordatorio 18:30; Entrenar piernas` y `recordatorios`.
+Valida hora HH:MM y mensaje no vacío, confirma la creación y lista por hora.
+La lista se mantiene en memoria durante la sesión: se pierde al cerrar el
+programa. Los avisos automáticos opcionales quedan pendientes.
+Verificación: `python3 -m unittest discover -s tests -v` (13 pruebas en total).
 
 ---
 
