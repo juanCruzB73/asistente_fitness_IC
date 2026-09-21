@@ -15,7 +15,7 @@
 | [x] | 2 | Gestión de objetivos | 0 | Alta |
 | [x] | 3 | Gestión de rutinas | 0 | Alta |
 | [x] | 4 | Registro de entrenamientos | 1 | Alta |
-| [ ] | 5 | Consulta de historial | 1, 4 | Alta |
+| [x] | 5 | Consulta de historial | 1, 4 | Alta |
 | [ ] | 6 | Análisis de progreso | 1, 4 | Media |
 | [ ] | 7 | Recordatorios | 0 | Media |
 | [~] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
@@ -112,6 +112,13 @@ confirmación, validaciones y flujo CLI con base temporal).
 - Manejar el caso sin registros.
 
 **Hecho cuando:** el agente responde el último peso/series/reps de un ejercicio dado.
+
+**Implementado:** `consultar_historial(ejercicio)` en `fitness/entrenamientos.py`.
+Comando: `historial de sentadillas` o `Quiero ver mi historial de sentadillas`.
+Consulta por nombre sin distinguir mayúsculas, ordena por fecha descendente y
+desempata por id; informa peso, series, repeticiones y fecha. Maneja ejercicio
+omitido o sin registros. Verificado con `python3 -m unittest discover -s tests -v`
+(6 pruebas de registro e historial con base temporal).
 
 ---
 

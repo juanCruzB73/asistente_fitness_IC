@@ -13,6 +13,8 @@ Comandos que entiendo por ahora:
   - Registrar ejercicio: "registrar sentadillas; 40; 10; 3"
                          Orden: ejercicio; peso en kg; repeticiones; series
                          Usa 0 kg si no hay carga y punto o coma para decimales.
+  - Consultar historial: "historial de sentadillas"
+                         Muestra el último entrenamiento del ejercicio.
   - ayuda:              muestra esta ayuda
   - salir:              termina el programa
 """

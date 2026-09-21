@@ -19,11 +19,11 @@ def procesar_comando(comando):
     elif re.search(r"\brutina\b", texto):
         _manejar_rutina(texto)
 
+    elif re.search(r"\bhistorial\b", texto):
+        _manejar_historial(comando)
+
     elif "objetivo" in texto or "quiero" in texto or "meta" in texto:
         _manejar_objetivo(comando, texto)
-
-    elif "historial" in texto:
-        hablar("La consulta de historial se implementa en el Bloque 5.")
 
     elif "progreso" in texto:
         hablar("El analisis de progreso se implementa en el Bloque 6.")
@@ -33,6 +33,14 @@ def procesar_comando(comando):
             "No entendi el comando. Puedes preguntarme por tu objetivo, "
             "rutina o progreso. Escribe 'ayuda' para ver los comandos."
         )
+
+
+def _manejar_historial(comando):
+    """Acepta 'historial de sentadillas' y 'Quiero ver mi historial de ...'."""
+    ejercicio = re.split(r"\bhistorial\b", comando, maxsplit=1, flags=re.IGNORECASE)[1]
+    ejercicio = ejercicio.strip(" :¿?¡!.,")
+    ejercicio = re.sub(r"^de(?:\s+|$)", "", ejercicio, count=1, flags=re.IGNORECASE)
+    entrenamientos.consultar_historial(ejercicio)
 
 
 def _manejar_registro(comando):

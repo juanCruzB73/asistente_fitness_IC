@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from fitness import db
-from fitness.entrenamientos import registrar_ejercicio
+from fitness.entrenamientos import consultar_historial, registrar_ejercicio
 from main import main
 
 
@@ -40,6 +40,47 @@ class RegistroTests(unittest.TestCase):
         self.assertLessEqual(inicio, datetime.fromisoformat(fila[4]))
         self.assertLessEqual(datetime.fromisoformat(fila[4]), datetime.now())
         self.assertIn("40.5 kg, 3 series de 10 repeticiones", self.salida.getvalue())
+
+    def test_historial_ordena_por_fecha_y_desempata_por_id(self):
+        with closing(db.conectar()) as conexion:
+            with conexion:
+                conexion.executemany(
+                    "INSERT INTO entrenamientos "
+                    "(ejercicio, peso, repeticiones, series, fecha) VALUES (?, ?, ?, ?, ?)",
+                    [
+                        ("Jalón", 40, 10, 3, "2026-09-20 10:00:00"),
+                        ("Jalón", 45, 8, 4, "2026-09-20 10:00:00"),
+                        ("Jalón", 20, 12, 2, "2026-09-19 10:00:00"),
+                        ("Sentadillas", 60, 6, 5, "2026-09-21 10:00:00"),
+                    ],
+                )
+        consultar_historial(" JALÓN ")
+        self.assertIn("Último entrenamiento de Jalón: 45 kg, 4 series de 8 repeticiones", self.salida.getvalue())
+        self.assertIn("2026-09-20 10:00:00", self.salida.getvalue())
+        self.assertEqual(len(self.registros()), 4)
+
+    def test_historial_sin_registros_y_sin_nombre(self):
+        consultar_historial("Press")
+        consultar_historial("  ")
+        consultar_historial("' OR 1=1 --")
+        self.assertIn("Todavía no tienes registros de 'Press'", self.salida.getvalue())
+        self.assertIn("Indica el ejercicio", self.salida.getvalue())
+        self.assertEqual(self.registros(), [])
+
+    def test_cli_historial_no_modifica_objetivo(self):
+        entradas = [
+            "Quiero aumentar masa muscular", "registrar Press de banca; 40; 10; 3",
+            "Quiero ver mi historial de PRESS DE BANCA", "historial",
+            "historial de remo", "Cual es mi objetivo?", "salir",
+        ]
+        with patch("builtins.input", side_effect=entradas):
+            main()
+        self.assertIn("Último entrenamiento de Press de banca: 40 kg", self.salida.getvalue())
+        self.assertIn("Indica el ejercicio", self.salida.getvalue())
+        self.assertIn("Todavía no tienes registros de 'remo'", self.salida.getvalue())
+        self.assertIn("Tu objetivo actual es: aumentar masa muscular", self.salida.getvalue())
+        with closing(db.conectar()) as conexion:
+            self.assertEqual(conexion.execute("SELECT COUNT(*) FROM objetivos").fetchone()[0], 1)
 
     def test_datos_invalidos_no_se_guardan(self):
         for datos in [
