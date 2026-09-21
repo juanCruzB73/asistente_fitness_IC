@@ -2,7 +2,7 @@
 
 import re
 
-from fitness import objetivos, rutinas
+from fitness import entrenamientos, objetivos, rutinas
 from fitness.voz import hablar
 
 # Frases que indican que el usuario quiere "fijar" un objetivo.
@@ -13,7 +13,10 @@ def procesar_comando(comando):
     #Recibe texto del usuario y ejecuta la accion correspondiente.
     texto = comando.lower().strip()
 
-    if re.search(r"\brutina\b", texto):
+    if re.match(r"^(?:quiero\s+)?registrar\b", texto):
+        _manejar_registro(comando)
+
+    elif re.search(r"\brutina\b", texto):
         _manejar_rutina(texto)
 
     elif "objetivo" in texto or "quiero" in texto or "meta" in texto:
@@ -30,6 +33,21 @@ def procesar_comando(comando):
             "No entendi el comando. Puedes preguntarme por tu objetivo, "
             "rutina o progreso. Escribe 'ayuda' para ver los comandos."
         )
+
+
+def _manejar_registro(comando):
+    """Lee ejercicio, peso, repeticiones y series separados por punto y coma."""
+    datos = re.sub(
+        r"^(?:quiero\s+)?registrar\b\s*", "", comando.strip(),
+        count=1, flags=re.IGNORECASE,
+    ).split(";")
+    if len(datos) != 4:
+        hablar(
+            "Usa: registrar ejercicio; peso en kg; repeticiones; series. "
+            "Ejemplo: registrar sentadillas; 40; 10; 3"
+        )
+        return
+    entrenamientos.registrar_ejercicio(*datos)
 
 
 def _manejar_rutina(texto):

@@ -14,7 +14,7 @@
 | [x] | 1 | Base de datos y persistencia | 0 | Alta |
 | [x] | 2 | Gestión de objetivos | 0 | Alta |
 | [x] | 3 | Gestión de rutinas | 0 | Alta |
-| [ ] | 4 | Registro de entrenamientos | 1 | Alta |
+| [x] | 4 | Registro de entrenamientos | 1 | Alta |
 | [ ] | 5 | Consulta de historial | 1, 4 | Alta |
 | [ ] | 6 | Análisis de progreso | 1, 4 | Media |
 | [ ] | 7 | Recordatorios | 0 | Media |
@@ -93,6 +93,12 @@
 - Confirmar por voz/texto el registro guardado.
 
 **Hecho cuando:** un ejercicio se inserta correctamente y el agente confirma los datos.
+
+**Implementado:** `fitness/entrenamientos.py`, integrado al router y a la ayuda CLI.
+Comando: `registrar sentadillas; 40; 10; 3` (ejercicio; kg; repeticiones; series).
+Admite peso cero y decimales con punto o coma; rechaza datos inválidos antes de guardar.
+Verificación: `python3 -m unittest discover -s tests -v` (persistencia, fecha,
+confirmación, validaciones y flujo CLI con base temporal).
 
 ---
 
