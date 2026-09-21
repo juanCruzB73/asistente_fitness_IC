@@ -1,10 +1,16 @@
+"""Conexión SQLite y creación idempotente del esquema de almacenamiento."""
+
 import sqlite3
 
 NOMBRE_DB = "fitness.db"
 
 
 def conectar():
-    """Devuelve una conexion a la base de datos."""
+    """Abre NOMBRE_DB relativo al directorio actual; quien llama debe cerrarla.
+
+    Devuelve sqlite3.Connection. No crea las tablas: llamar antes a inicializar.
+    Los errores de SQLite se propagan a quien llama.
+    """
     return sqlite3.connect(NOMBRE_DB)
 
 

@@ -20,8 +20,8 @@
 | [x] | 7 | Recordatorios | 0 | Media |
 | [x] | 8 | Comprensión de comandos (router) | 2–7 | Alta |
 | [x] | 9 | Bucle CLI (interfaz por texto) | 8 | Alta |
-| [ ] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
-| [ ] | 11 | Documentación y modularidad | Todos | Media |
+| [x] | 10 | Pruebas y ejemplo de interacción | 2–9 | Alta |
+| [x] | 11 | Documentación y modularidad | Todos | Media |
 | [ ] | 12 | Integración con voz (fase posterior) | 10 | Media |
 | [ ] | 13 | Ampliaciones futuras (opcional) | 10 | Baja |
 
@@ -216,6 +216,14 @@ incluyendo una ejecución real del programa con base de datos temporal.
 
 **Hecho cuando:** el ejemplo de interacción completa se reproduce sin fallos.
 
+**Verificado:** ejemplo reproducible en [ejemplos/interaccion.txt](ejemplos/interaccion.txt)
+con instrucciones en [ejemplos/README.md](ejemplos/README.md).
+`tests/test_flujo_completo.py` ejecuta el CLI real con base temporal, comprueba
+objetivo → rutina → registros → historial → progreso → recordatorios y verifica
+persistencia al reiniciar. Incluye casos sin registros, grupo inexistente,
+comando desconocido y datos inválidos sin inserciones. No se detectaron fallos
+en estos escenarios. `python3 -m unittest discover -s tests -v`: 22 pruebas aprobadas.
+
 ---
 
 ## Bloque 11 — Documentación y modularidad
@@ -228,6 +236,15 @@ incluyendo una ejecución real del programa con base de datos temporal.
 - Verificar que agregar una funcionalidad no obliga a reescribir el resto.
 
 **Hecho cuando:** el proyecto está documentado y las funciones son intercambiables.
+
+**Implementado:** [README.md](README.md) documenta ejecución, comandos, datos,
+límites, arquitectura y pasos para ampliar funcionalidades. Todos los módulos y
+funciones de la aplicación tienen docstrings, verificados mediante AST.
+Se revisó la separación entre CLI, router, funciones de dominio y conexión SQLite;
+agregar comandos requiere registrar su intención y ayuda, sin reescribir el bucle.
+Se documentaron los contratos de retorno, inicialización y cierre de conexiones,
+y la salida directa de la ayuda a revisar en la futura integración con voz.
+Verificación: 22 pruebas aprobadas con `python3 -m unittest discover -s tests -v`.
 
 ---
 

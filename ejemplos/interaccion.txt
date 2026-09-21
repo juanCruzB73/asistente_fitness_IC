@@ -1,0 +1,11 @@
+Quiero aumentar masa muscular
+Cual es mi objetivo?
+Quiero ver mi rutina de piernas
+registrar Sentadillas; 40; 10; 3
+progreso de Sentadillas
+registrar Sentadillas; 45; 10; 3
+historial de Sentadillas
+progreso de Sentadillas
+recordatorio 18:30; Entrenar piernas
+recordatorios
+salir

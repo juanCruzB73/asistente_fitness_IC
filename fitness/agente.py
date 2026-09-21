@@ -9,13 +9,19 @@ _CONSULTA = r"(?:quiero\s+)?(?:(?:ver|consultar|mostrar|muéstrame|muestrame)\s+
 
 
 def procesar_comando(comando):
-    """Reconoce la intención al inicio sin interpretar palabras de los datos."""
+    """Deriva un comando a una función de dominio; devuelve None.
+
+    Reconoce intención al inicio, sin distinguir mayúsculas. Las entradas
+    inválidas reciben orientación por hablar(). La base debe estar inicializada
+    para las acciones persistentes; ayuda y salir corresponden al bucle CLI.
+    """
     if not isinstance(comando, str) or not comando.strip():
         hablar("Escribe un comando. Usa 'ayuda' para ver las opciones.")
         return
     original = comando.strip().strip("¿?¡!.").strip()
 
     def coincide(patron, fuente=None):
+        """Devuelve el match completo o None sobre la fuente o el texto normalizado."""
         return re.fullmatch(patron, original if fuente is None else fuente, flags=re.IGNORECASE)
 
     registro = coincide(r"(?:quiero\s+)?registrar\b\s*(.*)")

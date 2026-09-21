@@ -8,7 +8,11 @@ recordatorios = []
 
 
 def agregar_recordatorio(hora, mensaje):
-    """Valida una hora HH:MM y agrega el mensaje a la lista de la sesión."""
+    """Valida HH:MM y un mensaje no vacío y los agrega a la lista de la sesión.
+
+    Confirma por hablar() y devuelve True; devuelve False ante datos inválidos.
+    No persiste en SQLite ni programa avisos automáticos.
+    """
     if not isinstance(hora, str) or not re.fullmatch(
         r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", hora.strip()
     ):

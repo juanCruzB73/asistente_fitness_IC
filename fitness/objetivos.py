@@ -1,4 +1,4 @@
-#gestion de objetivos
+"""Guarda objetivos y consulta el último objetivo persistido del usuario."""
 
 from datetime import datetime
 
@@ -7,7 +7,11 @@ from fitness.voz import hablar
 
 
 def establecer_objetivo(objetivo):
-    """Registra un nuevo objetivo del usuario."""
+    """Guarda el texto y la fecha y confirma por hablar(); devuelve None.
+
+    Requiere la base inicializada y un texto no vacío validado por el router.
+    Cada llamada agrega un objetivo sin borrar los anteriores.
+    """
     conexion = db.conectar()
     cursor = conexion.cursor()
 

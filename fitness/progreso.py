@@ -8,7 +8,12 @@ from fitness.voz import hablar
 
 
 def analizar_progreso(ejercicio):
-    """Compara primer y último peso por fecha, desempatando por id."""
+    """Compara primer y último peso por fecha, desempatando por id.
+
+    Requiere la base inicializada y al menos dos registros del ejercicio.
+    Informa la diferencia en kg o la falta de datos por hablar(); devuelve None.
+    No compara volumen, series ni repeticiones.
+    """
     if not isinstance(ejercicio, str) or not ejercicio.strip():
         hablar("Indica el ejercicio. Ejemplo: progreso de sentadillas")
         return

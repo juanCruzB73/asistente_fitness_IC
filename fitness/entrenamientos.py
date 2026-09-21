@@ -9,7 +9,11 @@ from fitness.voz import hablar
 
 
 def consultar_historial(ejercicio):
-    """Informa el último entrenamiento por fecha, usando el id para desempatar."""
+    """Informa el último entrenamiento por fecha, usando el id para desempatar.
+
+    Busca el nombre sin distinguir mayúsculas y quitando espacios exteriores.
+    Requiere la base inicializada. Informa si faltan datos; devuelve None.
+    """
     if not isinstance(ejercicio, str) or not ejercicio.strip():
         hablar("Indica el ejercicio. Ejemplo: historial de sentadillas")
         return
@@ -41,6 +45,8 @@ def registrar_ejercicio(ejercicio, peso, repeticiones, series):
 
     El peso se expresa en kg y puede ser cero para ejercicios sin carga.
     Las repeticiones y las series deben ser enteros positivos.
+    Requiere la base inicializada. Devuelve False ante datos inválidos;
+    los errores de SQLite se propagan. La confirmación se emite tras el commit.
     """
     if not isinstance(ejercicio, str) or not ejercicio.strip():
         hablar("Indica el nombre del ejercicio.")
