@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 fitness.db
 .venv/
+.venv-voz/

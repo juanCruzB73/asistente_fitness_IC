@@ -68,7 +68,8 @@ Estos comandos usan directamente el Python del entorno: no hace falta ejecutar
 `Activate.ps1` ni cambiar la política de ejecución de PowerShell.
 En Windows, [SpeechRecognition instala el soporte de micrófono mediante el extra
 audio](https://pypi.org/project/SpeechRecognition/) y
-[pyttsx3 utiliza SAPI5](https://pypi.org/project/pyttsx3/).
+la salida de voz utiliza SAPI5 directamente mediante `pywin32`, con reproducción
+síncrona para evitar que se omitan respuestas consecutivas.
 Los comandos `sudo apt` y las rutas `.venv/bin/python` de la sección Linux no
 corresponden a Windows.
 
@@ -201,18 +202,7 @@ El router reconoce formatos definidos, no lenguaje natural arbitrario. Para
 un objetivo libre, usá `Mi objetivo es ...`. Una entrada vacía se ignora y los
 comandos desconocidos muestran orientación sin terminar la sesión.
 
-## Datos y límites actuales
 
-- SQLite conserva objetivos y entrenamientos entre sesiones. El objetivo actual
-  es el último insertado. Cada entrenamiento guarda la fecha y hora local.
-- El historial devuelve el último registro por fecha. El progreso compara el
-  primer y el último peso y requiere dos registros; los empates de fecha se
-  resuelven por id. No analiza series, repeticiones ni volumen de entrenamiento.
-- Las rutinas son listas fijas en `fitness/rutinas.py`.
-- Los recordatorios viven en memoria durante el proceso: se pierden al cerrar y
-  no generan avisos automáticos.
-- Los errores de almacenamiento se propagan; la CLI todavía no ofrece un flujo
-  de recuperación para una base inaccesible o dañada.
 
 ## Pruebas y ejemplo
 
@@ -282,8 +272,9 @@ El avance y las etapas pendientes están en [PLAN_DE_TRABAJO.md](PLAN_DE_TRABAJO
 ## Modo de voz (opcional)
 
 Utiliza [SpeechRecognition](https://pypi.org/project/SpeechRecognition/) para
-transcribir con Google y [pyttsx3](https://pypi.org/project/pyttsx3/) para síntesis
-local. **Al activar voz, el audio se envía a Google y se necesita Internet.**
+transcribir con Google. La síntesis local usa SAPI5 mediante `pywin32` en Windows
+y [pyttsx3](https://pypi.org/project/pyttsx3/) en los demás sistemas.
+**Al activar voz, el audio se envía a Google y se necesita Internet.**
 Se usa el micrófono predeterminado y reconocimiento en español de Argentina
 (`es-AR`). Se selecciona una voz española instalada si está disponible; de lo
 contrario se mantiene la voz predeterminada del sistema.
@@ -312,6 +303,13 @@ los comandos con separadores, dictá “punto y coma”; el adaptador lo convier
 `;`. Por ejemplo: “registrar sentadillas punto y coma 40 punto y coma 10 punto y
 coma 3”. El servicio debe transcribir los números en cifras para que el validador
 existente los acepte; no se convierten números escritos como palabras.
+También podés decir «registrar sentadillas con 40 kilos, 10 repeticiones y 3
+series», «registrar sentadillas 40 10 3» o simplemente «registrar» para que el
+asistente pregunte cada dato por separado. Si la transcripción junta números
+(por ejemplo, `4010 3`), se inicia ese registro guiado sin intentar adivinarlos.
+El registro guiado pide confirmación antes de guardar; podés decir «cancelar»
+en cualquier paso. Los números deben transcribirse en cifras.
+
 La transcripción se muestra antes de procesarla y se ejecuta como un comando
 escrito, por lo que conviene revisar los datos confirmados por el agente.
 
@@ -319,15 +317,4 @@ Cada escucha espera hasta 5 segundos para comenzar y captura hasta 15 segundos.
 El silencio o audio incomprensible permiten reintentar. Si fallan el dispositivo,
 la red o la síntesis, el programa vuelve al teclado. Ctrl+C termina la sesión.
 
-### Verificación de audio pendiente
 
-Las pruebas automatizadas simulan micrófono, reconocimiento y síntesis: no
-certifican la calidad del audio real. En un equipo con micrófono y altavoces:
-
-1. Iniciá con `--modo voz` y comprobá que se escuche el saludo.
-2. Consultá una rutina y verificá transcripción y respuesta hablada.
-3. Fijá un objetivo, registrá dos entrenamientos y consultá su progreso.
-4. Decí “modo texto”, volvé con `modo voz` y terminá diciendo “salir”.
-
-El bloque 12 sigue parcial hasta completar esta prueba real. En el entorno de
-desarrollo no hay dispositivos de audio ni dependencias opcionales instaladas.

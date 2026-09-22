@@ -22,9 +22,8 @@ Comandos que entiendo por ahora:
   - ayuda:              muestra esta ayuda
   - Crear recordatorio: "recordatorio 18:30; Entrenar piernas"
   - Ver recordatorios:  "recordatorios"
-                        Se conservan solo durante la sesión, sin avisos automáticos.
   - salir:              termina el programa (también Ctrl+C o Ctrl+D)
-  - modo voz:           activa micrófono y respuesta hablada (envía audio a Google)
+  - modo voz:           activa micrófono y respuesta hablada
   - modo texto:         vuelve al teclado
 """
 

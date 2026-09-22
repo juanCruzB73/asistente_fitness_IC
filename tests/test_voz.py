@@ -20,6 +20,7 @@ class VozTests(unittest.TestCase):
         self.tts = MagicMock()
         self.tts.init.return_value = self.motor
         for parche in (
+            patch.object(voz.sys, 'platform', 'linux'),
             patch.dict('sys.modules', speech_recognition=self.sr, pyttsx3=self.tts),
             patch.object(voz, '_modo', 'texto'), patch.object(voz, '_motor', None),
             patch.object(voz, '_sr', None), patch.object(voz, '_reconocedor', None),
@@ -82,6 +83,73 @@ class VozTests(unittest.TestCase):
         mensajes = [llamada.args[0] for llamada in self.motor.say.call_args_list]
         self.assertTrue(any('Rutina de piernas:' in mensaje for mensaje in mensajes))
         self.assertEqual(voz._modo, 'texto')
+
+    def test_windows_reproduce_respuestas_consecutivas(self):
+        cliente = MagicMock()
+        motor = cliente.Dispatch.return_value
+        inglesa = MagicMock()
+        inglesa.GetAttribute.return_value = '409'
+        espanola = MagicMock()
+        espanola.GetAttribute.return_value = '2C0A;40A'
+        motor.GetVoices.return_value = [inglesa, espanola]
+        with patch.object(voz.sys, 'platform', 'win32'), patch.dict(
+            'sys.modules', {'win32com': MagicMock(), 'win32com.client': cliente}
+        ):
+            self.assertTrue(voz.configurar_modo('voz'))
+            self.assertIs(motor.Voice, espanola)
+            for mensaje in ('Bienvenido', 'Rutina de piernas', 'Registro guardado'):
+                voz.hablar(mensaje)
+            self.assertEqual(
+                [llamada.args for llamada in motor.Speak.call_args_list],
+                [('Bienvenido', 16), ('Rutina de piernas', 16), ('Registro guardado', 16)],
+            )
+            self.tts.init.assert_not_called()
+            motor.Speak.side_effect = RuntimeError('Sin altavoz')
+            voz.hablar('Otra respuesta')
+            self.assertEqual(voz._modo, 'texto')
+
+    def test_registros_dictados_con_unidades_espacios_y_dos_puntos(self):
+        voz.configurar_modo('voz')
+        casos = (
+            ('registrar sentadillas 40 10:3', 'registrar sentadillas; 40; 10; 3'),
+            ('registrar press de banca 40 10 3', 'registrar press de banca; 40; 10; 3'),
+            ('registrar sentadillas con 40 kilos, 10 repeticiones y 3 series',
+             'registrar sentadillas; 40; 10; 3'),
+            ('quiero registrar press de banca con 12,5 kg 8 repeticiones y 4 series',
+             'registrar press de banca; 12,5; 8; 4'),
+        )
+        for frase, esperado in casos:
+            with self.subTest(frase=frase):
+                self.sr.Recognizer.return_value.recognize_google.return_value = frase
+                self.assertEqual(voz.escuchar(), esperado)
+
+    def test_registro_ambiguo_pide_datos_y_confirmacion(self):
+        voz.configurar_modo('voz')
+        self.sr.Recognizer.return_value.recognize_google.side_effect = [
+            'registrar sentadillas 4010 3', 'sentadillas', '40', '10', '3', 'sí',
+        ]
+        self.assertEqual(voz.escuchar(), 'registrar sentadillas; 40; 10; 3')
+
+    def test_registro_guiado_cancelacion_y_comandos_de_control(self):
+        voz.configurar_modo('voz')
+        for respuesta, esperado in (('cancelar', ''), ('salir', 'salir'),
+                                    ('modo texto', 'modo texto')):
+            self.sr.Recognizer.return_value.recognize_google.side_effect = ['registrar', respuesta]
+            self.assertEqual(voz.escuchar(), esperado)
+        self.sr.Recognizer.return_value.recognize_google.side_effect = [
+            'registrar', 'sentadillas', '40', '10', '3', 'no',
+        ]
+        self.assertEqual(voz.escuchar(), '')
+
+    def test_cli_registro_dictado_llega_al_dominio(self):
+        self.sr.Recognizer.return_value.recognize_google.side_effect = [
+            'registrar sentadillas 40 10:3', 'salir',
+        ]
+        with patch('main.db.inicializar'), patch(
+            'fitness.agente.entrenamientos.registrar_ejercicio'
+        ) as registrar:
+            main(modo='voz')
+        registrar.assert_called_once_with('sentadillas', ' 40', ' 10', ' 3')
 
 
 if __name__ == '__main__':

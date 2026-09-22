@@ -1,6 +1,8 @@
 """Entrada/salida intercambiable: texto o micrófono con transcripción en Google."""
 
 import re
+import locale
+import sys
 from contextlib import contextmanager
 from contextvars import ContextVar
 
@@ -22,6 +24,31 @@ _reconocedor = None
 _motor = None
 
 
+def _crear_motor():
+    """En Windows usa SAPI síncrono para evitar pérdidas entre respuestas."""
+    if sys.platform == 'win32':
+        from win32com.client import Dispatch
+        motor = Dispatch('SAPI.SpVoice')
+        for voz in motor.GetVoices():
+            idiomas = voz.GetAttribute('Language').split(';')
+            if any(locale.windows_locale.get(int(codigo, 16), '').startswith('es')
+                   for codigo in idiomas if codigo):
+                motor.Voice = voz
+                break
+        return motor
+    import pyttsx3
+    motor = pyttsx3.init()
+    for voz in motor.getProperty('voices'):
+        idiomas = ' '.join(
+            idioma.decode('utf-8', errors='ignore') if isinstance(idioma, bytes) else idioma
+            for idioma in voz.languages
+        ).lower()
+        if 'es' in idiomas or 'spanish' in voz.name.lower():
+            motor.setProperty('voice', voz.id)
+            break
+    return motor
+
+
 def configurar_modo(modo):
     """Activa texto o voz; carga dependencias opcionales al activar voz.
 
@@ -34,24 +61,15 @@ def configurar_modo(modo):
     _modo = 'texto'
     if modo == 'texto':
         return True
-    print('Modo voz: el audio se enviará a Google para transcribirlo. Requiere Internet.')
+    print('Modo voz:Requiere Internet.')
     try:
         import speech_recognition as sr
-        import pyttsx3
         reconocedor = sr.Recognizer()
         reconocedor.operation_timeout = 10
         with sr.Microphone() as fuente:
             print('Calibrando micrófono; mantené silencio un momento.')
             reconocedor.adjust_for_ambient_noise(fuente, duration=0.5)
-        motor = _motor or pyttsx3.init()
-        for voz in motor.getProperty('voices'):
-            idiomas = ' '.join(
-                idioma.decode('utf-8', errors='ignore') if isinstance(idioma, bytes) else idioma
-                for idioma in voz.languages
-            ).lower()
-            if 'es' in idiomas or 'spanish' in voz.name.lower():
-                motor.setProperty('voice', voz.id)
-                break
+        motor = _motor or _crear_motor()
         _sr, _reconocedor, _motor = sr, reconocedor, motor
         _modo = 'voz'
         return True
@@ -71,14 +89,67 @@ def hablar(mensaje):
     print(f'Agente: {mensaje}')
     if _modo == 'voz':
         try:
-            _motor.say(str(mensaje))
-            _motor.runAndWait()
+            if sys.platform == 'win32':
+                # SVSFIsNotXML: lee texto literal y espera a terminar (sin async).
+                _motor.Speak(str(mensaje), 16)
+            else:
+                _motor.say(str(mensaje))
+                _motor.runAndWait()
         except Exception as error:
             _modo = 'texto'
             print(f'Falló la salida de voz: {error}. Continuamos en modo texto.')
 
 
 def escuchar(prompt='Tu: '):
+    """Adapta registros dictados y ofrece captura guiada si faltan separadores."""
+    texto = _escuchar_entrada(prompt)
+    if _modo != 'voz':
+        return texto
+    registro = re.fullmatch(r'(?:quiero\s+)?registrar\b\s*(.*)', texto, re.IGNORECASE)
+    if not registro or ';' in registro[1]:
+        return texto
+    numero = r'\d+(?:[.,]\d+)?'
+    datos = re.fullmatch(
+        rf'([^\d;]+?)\s+(?:con\s+)?({numero})\s*(?:kilos?|kilogramos?|kg)'
+        r'\s*,?\s*(\d+)\s+repeticiones\s*,?\s*(?:y\s+)?(\d+)\s+series',
+        registro[1], re.IGNORECASE,
+    )
+    if datos is None:
+        datos = re.fullmatch(
+            rf'([^\d;]+?)\s+({numero})\s+(\d+)[\s:]+(\d+)', registro[1]
+        )
+    if datos:
+        return 'registrar ' + '; '.join(dato.strip() for dato in datos.groups())
+
+    hablar('Vamos a registrar los datos por separado. Podés decir cancelar en cualquier paso.')
+    valores = []
+    preguntas = ('¿Qué ejercicio hiciste?', '¿Cuántos kilos usaste? Decí solo el número.',
+                 '¿Cuántas repeticiones hiciste? Decí solo el número.',
+                 '¿Cuántas series hiciste? Decí solo el número.')
+    for pregunta in preguntas:
+        hablar(pregunta)
+        respuesta = _escuchar_entrada().strip()
+        if respuesta.lower() in ('salir', 'chau', 'exit', 'modo texto'):
+            return respuesta
+        if not respuesta or respuesta.lower() == 'cancelar' or _modo != 'voz':
+            hablar('Registro cancelado. No se guardaron datos.')
+            return ''
+        if ';' in respuesta:
+            hablar('Registro cancelado: decí un solo dato por respuesta.')
+            return ''
+        valores.append(respuesta)
+    hablar(f'Entendí: {valores[0]}, {valores[1]} kilos, {valores[2]} repeticiones '
+           f'y {valores[3]} series. ¿Confirmás? Decí sí o no.')
+    confirmacion = _escuchar_entrada().strip().lower()
+    if confirmacion in ('salir', 'chau', 'exit', 'modo texto'):
+        return confirmacion
+    if _modo == 'voz' and confirmacion in ('sí', 'si', 'confirmar', 'confirmo'):
+        return 'registrar ' + '; '.join(valores)
+    hablar('Registro cancelado. No se guardaron datos.')
+    return ''
+
+
+def _escuchar_entrada(prompt='Tu: '):
     """Lee texto o transcribe una frase; silencio/incomprensión devuelve vacío.
 
     Limita la espera a 5 segundos y cada frase a 15 segundos. Los fallos de
